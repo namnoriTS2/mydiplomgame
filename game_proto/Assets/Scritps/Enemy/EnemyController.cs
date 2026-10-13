@@ -201,13 +201,27 @@ public class EnemyController : MonoBehaviour
         return angle <= viewAngle / 2f;
     }
 
-    private bool HasClearPathToPlayer()
+    
+private bool HasClearPathToPlayer()
+{
+    Vector3 origin = transform.position + Vector3.up * 1.5f;
+    Vector3 target = player.position + Vector3.up * 1f;
+
+    Vector3 direction = target - origin;
+    float distance = direction.magnitude;
+
+    if (Physics.Raycast(
+        origin,
+        direction.normalized,
+        out RaycastHit hit,
+        distance))
     {
-        var dirToPlayer = player.position - transform.position;
-        if(Physics.Raycast(transform.position, dirToPlayer.normalized, out RaycastHit hit, dirToPlayer.magnitude))
-        {
-            return hit.transform == player;
-        }
-        return true;
+        // Проверяем сам объект игрока и его дочерние объекты
+        return hit.transform == player ||
+               hit.transform.IsChildOf(player);
     }
+
+    return true;
+}
+
 }

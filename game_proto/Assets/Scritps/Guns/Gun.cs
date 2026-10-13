@@ -155,7 +155,7 @@ public class Gun : MonoBehaviour
         transform.localPosition = initalPosition;
     }
 
-    private void UpdateUIAmmo()
+    public void UpdateUIAmmo()
     {
         if(ammoText != null)
         {

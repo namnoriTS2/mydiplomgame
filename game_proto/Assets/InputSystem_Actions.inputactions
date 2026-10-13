@@ -79,18 +79,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SelectAutomatic",
+                    "name": "SelectShotgun",
                     "type": "Button",
-                    "id": "1e0f3e2b-4132-48bb-86e7-d2a820635a7f",
+                    "id": "c67d3ec5-0cec-41f2-959d-f03f7df81fca",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SelectShotgun",
+                    "name": "SelectAutomatic",
                     "type": "Button",
-                    "id": "c67d3ec5-0cec-41f2-959d-f03f7df81fca",
+                    "id": "1e0f3e2b-4132-48bb-86e7-d2a820635a7f",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -427,7 +427,7 @@
                 {
                     "name": "",
                     "id": "cc86c47a-bf2a-41cd-8e1f-898d9ea2e611",
-                    "path": "<Keyboard>/2",
+                    "path": "<Keyboard>/3",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -438,7 +438,7 @@
                 {
                     "name": "",
                     "id": "6f14ff12-5bbc-42ac-9cc3-f2f9674b6ada",
-                    "path": "<Keyboard>/3",
+                    "path": "<Keyboard>/2",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
