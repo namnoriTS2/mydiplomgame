@@ -57,6 +57,7 @@
     <Compile Include="Assets\ProgressBar\Script\ProgressBarCircle.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark02.cs" />
     <Compile Include="Assets\Scritps\UI\DeadScreen.cs" />
+    <Compile Include="Assets\Scritps\Inventory\InventoryManager.cs" />
     <Compile Include="Assets\Low Poly Guns\Scripts\GunsMenu.cs" />
     <Compile Include="Assets\Scritps\Player\CameraController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_ExampleScript_01.cs" />
@@ -74,8 +75,11 @@
     <Compile Include="Assets\Scritps\Player\PlayerController.cs" />
     <Compile Include="Assets\Scritps\UI\MainMenu.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextInfoDebugTool.cs" />
+    <Compile Include="Assets\Scritps\Inventory\InventoryPickup.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
     <Compile Include="Assets\Scritps\Guns\Shotgun.cs" />
+    <Compile Include="Assets\Scritps\Inventory\InventoryItem.cs" />
+    <Compile Include="Assets\Scritps\Inventory\InventoryItemUI.cs" />
     <Compile Include="Assets\Scritps\Sound\SoundEmitter.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01_UGUI.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\SimpleScript.cs" />
@@ -89,10 +93,12 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshSpawner.cs" />
     <Compile Include="Assets\Scritps\Player\Stamina.cs" />
     <Compile Include="Assets\Scritps\Guns\PlayerShooting.cs" />
+    <Compile Include="Assets\Scritps\Inventory\InventoryItemData.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scritps\UI\PauseMenu.cs" />
     <Compile Include="Assets\Scritps\Guns\DestroyAfterTime.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark03.cs" />
+    <Compile Include="Assets\Scritps\Inventory\InventoryPlayerInput.cs" />
     <Compile Include="Assets\Low Poly Guns\Scripts\GunView.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\DropdownSample.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexColorCycler.cs" />
