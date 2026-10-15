@@ -63,8 +63,8 @@ public void Shoot()
     UpdateUIAmmo();
 
     if (audioSource != null && shootSound != null)
-        audioSource.PlayOneShot(shootSound);
-
+        {audioSource.PlayOneShot(shootSound);}
+    EnemyController.MakeSound(transform.root.position, 1f);
     // Определяем точку прицеливания по центру экрана
     Ray ray = playerCamera.ViewportPointToRay(
         new Vector3(0.5f, 0.5f, 0f)

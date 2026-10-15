@@ -12,6 +12,7 @@ public class GunPistol : MonoBehaviour
     public float recoilDistance = 0.04f;
     public float recoilSpeed = 10f;
 
+
     public GameObject bullet;
     public Transform bulletSpawnPoint;
     public GameObject weaponFlash;
@@ -66,6 +67,7 @@ public class GunPistol : MonoBehaviour
     {
     audioSource.PlayOneShot(shootSound);
     }
+    EnemyController.MakeSound(transform.root.position, 1f);
 
     // Луч из центра экрана через прицел
     Ray ray = playerCamera.ViewportPointToRay(
@@ -85,7 +87,7 @@ public class GunPistol : MonoBehaviour
     Quaternion rotation = Quaternion.LookRotation(direction);
 
     Instantiate(bullet, bulletSpawnPoint.position, rotation);
-     Instantiate(weaponFlash, bulletSpawnPoint.position, rotation);
+    Instantiate(weaponFlash, bulletSpawnPoint.position, rotation);
     StopCoroutine(nameof(Recoil));
     StartCoroutine(nameof(Recoil));
     }

@@ -66,7 +66,7 @@ public class Gun : MonoBehaviour
     {
     audioSource.PlayOneShot(shootSound);
     }
-
+    EnemyController.MakeSound(transform.root.position, 1f);
     // Луч из центра экрана через прицел
     Ray ray = playerCamera.ViewportPointToRay(
         new Vector3(0.5f, 0.5f, 0f)
