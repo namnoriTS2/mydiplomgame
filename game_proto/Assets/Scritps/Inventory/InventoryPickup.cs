@@ -16,20 +16,25 @@ public class InventoryPickup : MonoBehaviour
     }
 
     private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            InventoryPlayerInput.SetNearbyPickup(this);
-        }
-    }
+{
+    Debug.Log("Предмет коснулся объекта: " + other.name
+        + ", тег: " + other.tag);
 
-    private void OnTriggerExit(Collider other)
+    if (other.CompareTag("Player"))
     {
-        if (other.CompareTag("Player"))
-        {
-            InventoryPlayerInput.ClearNearbyPickup(this);
-        }
+        Debug.Log("Игрок рядом с предметом!");
+        InventoryPlayerInput.SetNearbyPickup(this);
     }
+}
+
+private void OnTriggerExit(Collider other)
+{
+    if (other.CompareTag("Player"))
+    {
+        Debug.Log("Игрок отошёл от предмета.");
+        InventoryPlayerInput.ClearNearbyPickup(this);
+    }
+}
 
     public void PickUp()
     {

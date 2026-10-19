@@ -9,6 +9,12 @@ public class PlayerShooting : MonoBehaviour
 
     public void OnShoot(InputAction.CallbackContext context)
     {
+        if (InventoryManager.Instance != null &&
+        InventoryManager.Instance.IsOpen)
+        {
+            isHoldingShoot = false;
+            return;
+        }
         if (context.performed)
             isHoldingShoot = true;
         else if (context.canceled)

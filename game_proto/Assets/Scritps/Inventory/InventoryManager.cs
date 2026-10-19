@@ -51,18 +51,20 @@ public class InventoryManager : MonoBehaviour
         SetInventoryOpen(!IsOpen);
     }
 
-    public void SetInventoryOpen(bool open)
-    {
-        IsOpen = open;
 
-        if (inventoryPanel != null)
-            inventoryPanel.SetActive(open);
+public void SetInventoryOpen(bool open)
+{
+    IsOpen = open;
 
-        Cursor.visible = open;
-        Cursor.lockState = open
-            ? CursorLockMode.None
-            : CursorLockMode.Locked;
-    }
+    if (inventoryPanel != null)
+        inventoryPanel.SetActive(open);
+
+    Cursor.visible = open;
+    Cursor.lockState = open
+        ? CursorLockMode.None
+        : CursorLockMode.Locked;
+}
+
 
     public bool CanPlace(
         InventoryItemData data,

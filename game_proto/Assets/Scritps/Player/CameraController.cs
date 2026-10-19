@@ -20,6 +20,11 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (InventoryManager.Instance != null &&
+        InventoryManager.Instance.IsOpen)
+        {
+            return;
+        }
         if (PauseMenu.gameisPause)
         {
             return;
