@@ -28,6 +28,7 @@ public class Gun : MonoBehaviour
     private Quaternion initalRotation;
     private Vector3 initalPosition;
     private Vector3 reloadRotationOffset = new Vector3(60, 50,50);
+    private InventoryWeaponKind ammoKind = InventoryWeaponKind.Automatic;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -47,9 +48,7 @@ public class Gun : MonoBehaviour
 
     if (currentAmmo <= 0)
     {
-        if(reserveAmmo > 0){
-        StartCoroutine(Reload());
-        }
+        TryReload();
         return;
     }
 
@@ -90,48 +89,77 @@ public class Gun : MonoBehaviour
     StartCoroutine(nameof(Recoil));
     }
 
-    IEnumerator Reload()
+    private IEnumerator Reload()
+{
+    if (isReloading)
+        yield break;
+
+    isReloading = true;
+
+    int neededAmmo = magSize - currentAmmo;
+    int availableAmmo = GetReserveAmmo();
+    int ammoToLoad = Mathf.Min(neededAmmo, availableAmmo);
+
+    if (ammoToLoad <= 0)
     {
-        isReloading = true;
-        if (audioSource != null && reloadSound != null)
-    {
-    audioSource.PlayOneShot(reloadSound);
-    }
-        Quaternion targetRotation = Quaternion.Euler(initalRotation.eulerAngles + reloadRotationOffset);
-        float halfReload = reloadtime /2;
-        float t = 0f;
-
-        while (t < halfReload)
-        {
-            t += Time.deltaTime;
-            transform.localRotation = Quaternion.Slerp(initalRotation, targetRotation, t/halfReload);
-            yield return null;
-        }
-        t = 0f;
-        while (t < halfReload)
-        {
-            t += Time.deltaTime;
-            transform.localRotation = Quaternion.Slerp(targetRotation, initalRotation, t/halfReload);
-            yield return null;
-        }
-
-        int neededAmmo = magSize - currentAmmo;
-        int ammoToLoad = Mathf.Min(neededAmmo, reserveAmmo);
-
-        currentAmmo += ammoToLoad;
-        reserveAmmo -= ammoToLoad;
         isReloading = false;
-        UpdateUIAmmo();
+        yield break;
     }
+
+    if (audioSource != null && reloadSound != null)
+        audioSource.PlayOneShot(reloadSound);
+
+    Quaternion targetRotation =
+        Quaternion.Euler(initalRotation.eulerAngles + reloadRotationOffset);
+
+    float halfReload = reloadtime / 2f;
+    float t = 0f;
+
+    while (t < halfReload)
+    {
+        t += Time.deltaTime;
+        transform.localRotation = Quaternion.Slerp(
+            initalRotation, targetRotation, t / halfReload);
+        yield return null;
+    }
+
+    t = 0f;
+
+    while (t < halfReload)
+    {
+        t += Time.deltaTime;
+        transform.localRotation = Quaternion.Slerp(
+            targetRotation, initalRotation, t / halfReload);
+        yield return null;
+    }
+
+    // Повторно проверяем запас после анимации.
+    int currentReserve = GetReserveAmmo();
+    int amountToTake = Mathf.Min(magSize - currentAmmo, currentReserve);
+
+    int loaded = InventoryManager.Instance != null
+        ? InventoryManager.Instance.ConsumeAmmo(ammoKind, amountToTake)
+        : 0;
+
+    currentAmmo += loaded;
+
+    isReloading = false;
+    UpdateUIAmmo();
+}
 
     public void TryReload()
+{
+    if (isReloading || currentAmmo >= magSize)
+        return;
+
+    if (GetReserveAmmo() <= 0)
     {
-        if (isReloading || currentAmmo == magSize || reserveAmmo <= 0)
-        {
-            return;
-        }
-        StartCoroutine(Reload());
+        Debug.Log("В инвентаре нет патронов для автомата.");
+        return;
     }
+
+    StartCoroutine(Reload());
+}
 
     private IEnumerator Recoil()
     {
@@ -156,10 +184,15 @@ public class Gun : MonoBehaviour
     }
 
     public void UpdateUIAmmo()
-    {
-        if(ammoText != null)
-        {
-            ammoText.text = currentAmmo + "/" + reserveAmmo;
-        }
-    }
+{
+    if (ammoText != null)
+        ammoText.text = currentAmmo + "/" + GetReserveAmmo();
+}
+    private int GetReserveAmmo()
+{
+    if (InventoryManager.Instance == null)
+        return 0;
+
+    return InventoryManager.Instance.GetAmmoCount(ammoKind);
+}
 }

@@ -29,6 +29,7 @@ public class GunPistol : MonoBehaviour
     private Quaternion initalRotation;
     private Vector3 initalPosition;
     private Vector3 reloadRotationOffset = new Vector3(60, 50,50);
+    private InventoryWeaponKind ammoKind = InventoryWeaponKind.Pistol;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -47,12 +48,10 @@ public class GunPistol : MonoBehaviour
         return;
 
     if (currentAmmo <= 0)
-    {
-        if(reserveAmmo > 0){
-        StartCoroutine(Reload());
-        }
-        return;
-    }
+{
+    TryReload();
+    return;
+}
 
     if (bullet == null || bulletSpawnPoint == null || playerCamera == null)
     {
@@ -117,23 +116,32 @@ public class GunPistol : MonoBehaviour
             yield return null;
         }
 
-        int neededAmmo = magSize - currentAmmo;
-        int ammoToLoad = Mathf.Min(neededAmmo, reserveAmmo);
+       int neededAmmo = magSize - currentAmmo;
+int availableAmmo = GetReserveAmmo();
+int amountToTake = Mathf.Min(neededAmmo, availableAmmo);
 
-        currentAmmo += ammoToLoad;
-        reserveAmmo -= ammoToLoad;
+int loaded = InventoryManager.Instance != null
+    ? InventoryManager.Instance.ConsumeAmmo(ammoKind, amountToTake)
+    : 0;
+
+currentAmmo += loaded;
         isReloading = false;
         UpdateUIAmmo();
     }
 
-    public void TryReload()
+   public void TryReload()
+{
+    if (isReloading || currentAmmo >= magSize)
+        return;
+
+    if (GetReserveAmmo() <= 0)
     {
-        if (isReloading || currentAmmo == magSize || reserveAmmo <= 0)
-        {
-            return;
-        }
-        StartCoroutine(Reload());
+        Debug.Log("В инвентаре нет патронов для пистолета.");
+        return;
     }
+
+    StartCoroutine(Reload());
+}
 
     private IEnumerator Recoil()
     {
@@ -158,10 +166,15 @@ public class GunPistol : MonoBehaviour
     }
 
     public void UpdateUIAmmo()
-    {
-        if(ammoText != null)
-        {
-            ammoText.text = currentAmmo + "/" + reserveAmmo;
-        }
-    }
+{
+    if (ammoText != null)
+        ammoText.text = currentAmmo + "/" + GetReserveAmmo();
+}
+    private int GetReserveAmmo()
+{
+    if (InventoryManager.Instance == null)
+        return 0;
+
+    return InventoryManager.Instance.GetAmmoCount(ammoKind);
+}
 }

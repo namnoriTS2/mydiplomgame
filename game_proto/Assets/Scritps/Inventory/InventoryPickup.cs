@@ -37,26 +37,58 @@ private void OnTriggerExit(Collider other)
 }
 
     public void PickUp()
+{
+    if (itemData == null)
     {
-        if (itemData == null)
+        Debug.LogWarning("Не назначен Item Data у " + gameObject.name);
+        return;
+    }
+
+    if (InventoryManager.Instance == null)
+    {
+        Debug.LogError("InventoryManager.Instance не найден!");
+        return;
+    }
+
+    bool added = InventoryManager.Instance.TryAddItem(itemData, amount);
+
+    if (!added)
+    {
+        Debug.Log("Недостаточно места в инвентаре!");
+        return;
+    }
+
+    Debug.Log(
+        "Подбор: " + itemData.itemName +
+        " | Item Type: " + itemData.itemType +
+        " | Weapon Kind: " + itemData.weaponKind
+    );
+
+    if (itemData.itemType == InventoryItemType.Weapon)
+    {
+        if (itemData.weaponKind == InventoryWeaponKind.None)
         {
-            Debug.LogWarning(
-                "Не назначен Item Data у " + gameObject.name);
-            return;
+            Debug.LogError("У оружия не указан Weapon Kind: " + itemData.itemName);
         }
-
-        bool added = InventoryManager.Instance.TryAddItem(
-            itemData, amount);
-
-        if (added)
+        else if (WeaponSwitcher.Instance == null)
         {
-            Debug.Log("Подобран предмет: " + itemData.itemName);
-            InventoryPlayerInput.ClearNearbyPickup(this);
-            Destroy(gameObject);
+            Debug.LogError("WeaponSwitcher.Instance не найден!");
         }
         else
         {
-            Debug.Log("Недостаточно места в инвентаре!");
+            bool unlocked = WeaponSwitcher.Instance.UnlockWeapon(itemData.weaponKind);
+
+            Debug.Log("Результат разблокировки: " + unlocked);
         }
     }
+    if (itemData.itemType == InventoryItemType.Ammo &&
+    InventoryManager.Instance != null)
+{
+    InventoryManager.Instance.UpdateAmmoUI();
+}
+    Debug.Log("Подобран предмет: " + itemData.itemName);
+
+    InventoryPlayerInput.ClearNearbyPickup(this);
+    Destroy(gameObject);
+}
 }

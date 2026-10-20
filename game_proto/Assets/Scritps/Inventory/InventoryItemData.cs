@@ -3,12 +3,21 @@ using UnityEngine;
 
 public enum InventoryItemType
 {
+    None,
     Weapon,
     Ammo,
     Medical,
     Key,
     Quest,
-    Resource
+    Resource,
+}
+
+public enum InventoryWeaponKind
+{
+    None,
+    Pistol,
+    Automatic,
+    Shotgun
 }
 
 [CreateAssetMenu(
@@ -34,4 +43,6 @@ public class InventoryItemData : ScriptableObject
 
     [Header("Стопки")]
     [Min(1)] public int maxStack = 1;
+    [Header("Оружие")]
+    public InventoryWeaponKind weaponKind = InventoryWeaponKind.None;
 }

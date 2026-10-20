@@ -27,6 +27,7 @@ public class Shotgun : MonoBehaviour
     private int currentAmmo;
     private float nextTimeToFire;
     private bool isReloading;
+    private InventoryWeaponKind ammoKind = InventoryWeaponKind.Shotgun;
 
     void Start()
     {
@@ -121,12 +122,18 @@ public void Shoot()
 
 
     public void TryReload()
-    {
-        if (isReloading || currentAmmo >= magSize || reserveAmmo <= 0)
-            return;
+{
+    if (isReloading || currentAmmo >= magSize)
+        return;
 
-        StartCoroutine(Reload());
+    if (GetReserveAmmo() <= 0)
+    {
+        Debug.Log("В инвентаре нет патронов для дробовика.");
+        return;
     }
+
+    StartCoroutine(Reload());
+}
 
     private IEnumerator Reload()
     {
@@ -138,18 +145,28 @@ public void Shoot()
         yield return new WaitForSeconds(reloadTime);
 
         int neededAmmo = magSize - currentAmmo;
-        int ammoToLoad = Mathf.Min(neededAmmo, reserveAmmo);
+int availableAmmo = GetReserveAmmo();
+int amountToTake = Mathf.Min(neededAmmo, availableAmmo);
 
-        currentAmmo += ammoToLoad;
-        reserveAmmo -= ammoToLoad;
+int loaded = InventoryManager.Instance != null
+    ? InventoryManager.Instance.ConsumeAmmo(ammoKind, amountToTake)
+    : 0;
 
-        isReloading = false;
-        UpdateUIAmmo();
+currentAmmo += loaded;
+
+isReloading = false;
+UpdateUIAmmo();
     }
 
     public void UpdateUIAmmo()
-    {
-        if (ammoText != null)
-            ammoText.text = currentAmmo + "/" + reserveAmmo;
-    }
+{
+    if (ammoText != null)
+        ammoText.text = currentAmmo + "/" + GetReserveAmmo();
+}    private int GetReserveAmmo()
+{
+    if (InventoryManager.Instance == null)
+        return 0;
+
+    return InventoryManager.Instance.GetAmmoCount(ammoKind);
+}
 }

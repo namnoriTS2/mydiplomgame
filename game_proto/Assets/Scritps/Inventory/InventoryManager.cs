@@ -7,8 +7,8 @@ public class InventoryManager : MonoBehaviour
     public static InventoryManager Instance { get; private set; }
 
     [Header("Размер сетки")]
-    [Min(1)] public int columns = 8;
-    [Min(1)] public int rows = 6;
+    [Min(1)] public int columns = 12;
+    [Min(1)] public int rows = 7;
 
     [Header("Интерфейс")]
     public GameObject inventoryPanel;
@@ -16,8 +16,8 @@ public class InventoryManager : MonoBehaviour
     public GameObject itemUIPrefab;
 
     [Header("Настройки ячеек")]
-    public float cellSize = 64f;
-    public float spacing = 4f;
+    public float cellSize = 130f;
+    public float spacing = 5f;
 
     [Header("Предметы")]
     public List<InventoryItem> items = new List<InventoryItem>();
@@ -286,4 +286,87 @@ public void SetInventoryOpen(bool open)
             itemViews.Add(view);
         }
     }
+
+public int GetAmmoCount(InventoryWeaponKind kind)
+{
+    int total = 0;
+
+    foreach (InventoryItem item in items)
+    {
+        if (item == null || item.data == null)
+            continue;
+
+        if (item.data.itemType == InventoryItemType.Ammo &&
+            item.data.weaponKind == kind)
+        {
+            total += item.amount;
+        }
+    }
+
+    return total;
+}
+
+public int ConsumeAmmo(InventoryWeaponKind kind, int amount)
+{
+    if (amount <= 0)
+        return 0;
+
+    int remaining = amount;
+
+    // Проходим по стопкам патронов подходящего типа.
+    for (int i = items.Count - 1; i >= 0 && remaining > 0; i--)
+    {
+        InventoryItem item = items[i];
+
+        if (item == null || item.data == null)
+            continue;
+
+        if (item.data.itemType != InventoryItemType.Ammo ||
+            item.data.weaponKind != kind)
+            continue;
+
+        int taken = Mathf.Min(item.amount, remaining);
+
+        item.amount -= taken;
+        remaining -= taken;
+
+        if (item.amount <= 0)
+            items.RemoveAt(i);
+    }
+
+    int consumed = amount - remaining;
+
+    if (consumed > 0)
+        RefreshUI();
+
+    return consumed;
+}
+public void UpdateAmmoUI()
+{
+    if (WeaponSwitcher.Instance == null)
+        return;
+
+    GameObject weapon = WeaponSwitcher.Instance.GetCurrentWeapon();
+
+    if (weapon == null)
+        return;
+
+    Shotgun shotgun = weapon.GetComponent<Shotgun>();
+    if (shotgun != null)
+    {
+        shotgun.UpdateUIAmmo();
+        return;
+    }
+
+    Gun gun = weapon.GetComponent<Gun>();
+    if (gun != null)
+    {
+        gun.UpdateUIAmmo();
+        return;
+    }
+
+    GunPistol pistol = weapon.GetComponent<GunPistol>();
+    if (pistol != null)
+        pistol.UpdateUIAmmo();
+}
 }
