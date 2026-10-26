@@ -127,6 +127,7 @@
     <Compile Include="Assets\Flooded_Grounds\PostProcessing\Runtime\Models\DitheringModel.cs" />
     <Compile Include="Assets\Scritps\Player\Stamina.cs" />
     <Compile Include="Assets\Scritps\Guns\PlayerShooting.cs" />
+    <Compile Include="Assets\Scritps\Player\StealthKill.cs" />
     <Compile Include="Assets\Flooded_Grounds\PostProcessing\Runtime\Components\VignetteComponent.cs" />
     <Compile Include="Assets\Flooded_Grounds\PostProcessing\Runtime\Attributes\TrackballGroupAttribute.cs" />
     <Compile Include="Assets\Scritps\Inventory\InventoryItemData.cs" />

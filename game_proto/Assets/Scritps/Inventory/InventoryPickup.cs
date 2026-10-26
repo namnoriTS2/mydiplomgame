@@ -1,10 +1,12 @@
 
 using UnityEngine;
+using TMPro;
 
 [RequireComponent(typeof(Collider))]
 public class InventoryPickup : MonoBehaviour
 {
     public InventoryItemData itemData;
+    public TMP_Text pickupText;
 
     [Min(1)]
     public int amount = 1;
@@ -15,15 +17,16 @@ public class InventoryPickup : MonoBehaviour
         col.isTrigger = true;
     }
 
-    private void OnTriggerEnter(Collider other)
+private void OnTriggerEnter(Collider other)
 {
-    Debug.Log("Предмет коснулся объекта: " + other.name
-        + ", тег: " + other.tag);
-
     if (other.CompareTag("Player"))
     {
-        Debug.Log("Игрок рядом с предметом!");
         InventoryPlayerInput.SetNearbyPickup(this);
+
+        if (pickupText != null)
+        {
+            pickupText.gameObject.SetActive(true);
+        }
     }
 }
 
@@ -31,8 +34,10 @@ private void OnTriggerExit(Collider other)
 {
     if (other.CompareTag("Player"))
     {
-        Debug.Log("Игрок отошёл от предмета.");
         InventoryPlayerInput.ClearNearbyPickup(this);
+
+        if (pickupText != null)
+            pickupText.gameObject.SetActive(false);
     }
 }
 
@@ -89,6 +94,11 @@ private void OnTriggerExit(Collider other)
     Debug.Log("Подобран предмет: " + itemData.itemName);
 
     InventoryPlayerInput.ClearNearbyPickup(this);
-    Destroy(gameObject);
+   if (pickupText != null)
+{
+    pickupText.gameObject.SetActive(false);
+}
+
+Destroy(gameObject);
 }
 }
