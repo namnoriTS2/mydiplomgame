@@ -20,6 +20,8 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (CraftingUI.IsCraftingOpen)
+        return;
         if (InventoryManager.Instance != null &&
         InventoryManager.Instance.IsOpen)
         {

@@ -54,6 +54,8 @@ public class PlayerShooting : MonoBehaviour
 
     private void Update()
     {
+        if (CraftingUI.IsCraftingOpen)
+    return;
         if (!isHoldingShoot)
             return;
 

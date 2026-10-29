@@ -53,6 +53,13 @@ public class PlayerController : MonoBehaviour{
 //     }
 
    private void Update(){
+    if (InventoryManager.Instance != null &&
+        InventoryManager.Instance.IsOpen)
+        {
+            return;
+        }
+    if (CraftingUI.IsCraftingOpen)
+    return;
     isRunning = Input.GetKey(KeyCode.LeftShift)
     && moveInput.y >0 && canrun;
     if (stamina !=null && stamina.Value <= 0f){

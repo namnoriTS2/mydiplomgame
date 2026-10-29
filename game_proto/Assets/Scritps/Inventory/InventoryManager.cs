@@ -369,4 +369,148 @@ public void UpdateAmmoUI()
     if (pistol != null)
         pistol.UpdateUIAmmo();
 }
+
+public int CountItemById(string itemId)
+{
+    int total = 0;
+
+    foreach (InventoryItem item in items)
+    {
+        if (item == null || item.data == null)
+            continue;
+
+        if (item.data.itemId == itemId)
+            total += item.amount;
+    }
+
+    return total;
+}
+
+public bool HasItems(string itemId, int amount)
+{
+    return CountItemById(itemId) >= amount;
+}
+
+public bool ConsumeItemsById(string itemId, int amount)
+{
+    if (amount <= 0 || !HasItems(itemId, amount))
+        return false;
+
+    int remaining = amount;
+
+    for (int i = items.Count - 1; i >= 0 && remaining > 0; i--)
+    {
+        InventoryItem item = items[i];
+
+        if (item == null || item.data == null)
+            continue;
+
+        if (item.data.itemId != itemId)
+            continue;
+
+        int taken = Mathf.Min(item.amount, remaining);
+
+        item.amount -= taken;
+        remaining -= taken;
+
+        if (item.amount <= 0)
+            items.RemoveAt(i);
+    }
+
+    RefreshUI();
+    return remaining == 0;
+}
+  
+public bool CanAddItem(InventoryItemData data, int amount)
+{
+    if (data == null || amount <= 0 ||
+        data.width <= 0 || data.height <= 0 ||
+        data.maxStack <= 0)
+        return false;
+
+    int remaining = amount;
+
+    // Проверяем свободное место в существующих стопках.
+    if (data.maxStack > 1)
+    {
+        foreach (InventoryItem item in items)
+        {
+            if (item == null || item.data == null)
+                continue;
+
+            if (item.data.itemId != data.itemId)
+                continue;
+
+            remaining -= Mathf.Max(
+                0, data.maxStack - item.amount);
+
+            if (remaining <= 0)
+                return true;
+        }
+    }
+
+    // Отмечаем занятые ячейки сетки.
+    bool[,] occupied = new bool[columns, rows];
+
+    foreach (InventoryItem item in items)
+    {
+        if (item == null || item.data == null)
+            continue;
+
+        for (int x = item.x;
+             x < item.x + item.data.width && x < columns; x++)
+        {
+            for (int y = item.y;
+                 y < item.y + item.data.height && y < rows; y++)
+            {
+                if (x >= 0 && y >= 0)
+                    occupied[x, y] = true;
+            }
+        }
+    }
+
+    // Проверяем, можно ли разместить все новые стопки.
+    while (remaining > 0)
+    {
+        bool placed = false;
+
+        for (int y = 0; y <= rows - data.height && !placed; y++)
+        {
+            for (int x = 0; x <= columns - data.width && !placed; x++)
+            {
+                bool free = true;
+
+                for (int dx = 0; dx < data.width && free; dx++)
+                {
+                    for (int dy = 0; dy < data.height; dy++)
+                    {
+                        if (occupied[x + dx, y + dy])
+                        {
+                            free = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (!free)
+                    continue;
+
+                for (int dx = 0; dx < data.width; dx++)
+                {
+                    for (int dy = 0; dy < data.height; dy++)
+                        occupied[x + dx, y + dy] = true;
+                }
+
+                remaining -= Mathf.Min(remaining, data.maxStack);
+                placed = true;
+            }
+        }
+
+        if (!placed)
+            return false;
+    }
+
+    return true;
+}
+  
 }

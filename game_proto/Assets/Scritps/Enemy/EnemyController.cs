@@ -1,230 +1,3 @@
-// using System.Collections;
-// using System.Runtime.CompilerServices;
-// using TMPro.Examples;
-// using UnityEditor.Experimental.GraphView;
-// using UnityEngine;
-// using UnityEngine.AI;
-// using UnityEngine.UI;
-
-// public enum EnumyState
-// {
-//     Patrolling, 
-//     Following, 
-//     Attacking
-// }
-
-// public class EnemyController : MonoBehaviour
-// {
-//     [Header("References")]
-//     [SerializeField] private Transform[] patrolPoints;
-//     [SerializeField] private Transform player;
-
-//     [Header("Settings")]
-//     [SerializeField] private float patrolWaitTime = 2f;
-//     [SerializeField] private float stopAtDistance = 0.5f;
-//     [SerializeField] private float detectionRange = 5f;
-//     [SerializeField] private float viewAngle = 90f;
-//     [SerializeField] private float losePlayerTime = 3f;
-//     [SerializeField] private float attackrange = 1.2f;
-
-
-//     private NavMeshAgent _agent;
-//     //private Animator _animator;
-//     private int _curentPatrolIndex;
-//     private bool _isWaiting;
-//     private EnumyState _state = EnumyState.Patrolling;
-
-//     private float _timeSinceLostPlayer;
-
-//     private bool _isBiting;
-
-//     private void Awake()
-//     {
-//         _agent = GetComponent<NavMeshAgent>();
-//        // _animator = GetComponent<Animator>();
-//     }
-
-//     private void Start()
-//     {
-//         GoToNextPatrolpoint();
-//     }
-
-//     private void Update()
-//     {
-//         var distanceToPlayer = Vector3.Distance(player.position, transform.position);
-//         switch (_state)
-//         {
-//             case EnumyState.Patrolling:
-//                 Patrol();
-//                 if(distanceToPlayer <= detectionRange && CanSeePlayer())
-//                 {
-//                     _state = EnumyState.Following;
-//                 }
-//                 break;
-//             case EnumyState.Following:
-//                 FollowPlayer();
-//                 if(distanceToPlayer <= attackrange){
-//                     _state = EnumyState.Attacking;
-//                     StartAttack();
-//                 }
-//                 if (!CanSeePlayer())
-//                 {
-//                     _timeSinceLostPlayer += Time.deltaTime;
-//                     if(_timeSinceLostPlayer >= losePlayerTime)
-//                     {
-//                         _state = EnumyState.Patrolling;
-//                         GoToClosestPatrolPoint();
-//                     }
-//                 }
-//                 else
-//                 {
-//                     _timeSinceLostPlayer = 0f;
-//                 }
-//                 break;
-//                 case EnumyState.Attacking:
-//                 Attack();
-//                 if (!_isBiting && distanceToPlayer > attackrange)
-//                 {
-//                     _state = EnumyState.Following;
-//                     _agent.isStopped = false;
-//                 }
-//                 break;
-//         }
-//         // UpdateAnimations();
-
-//     }
-
-//     private void StartAttack()
-//     {
-//         _agent.isStopped = true;
-//         _isBiting = true;
-//         //_animator.SetTrigger("Bite", Bite)
-//     }
-
-//     private void Attack()
-//     {
-//         _agent.isStopped = true;
-//         var direction = (player.position - transform.position).normalized;
-//         direction.y = 0f;
-//         if(direction != Vector3.zero)
-//         {
-//             transform.rotation = Quaternion.LookRotation(direction);
-//         }
-//     }
-
-//     private void OnBiteAnimationEnd()
-//     {
-//         _isBiting = false;
-//     }
-
-//     private void FollowPlayer()
-//     {
-//         _agent.SetDestination(player.position);
-//     }
-
-//     private void Patrol()
-//     {
-//         if (_isWaiting)
-//         {
-//             return;
-//         }
-//         if(!_agent.pathPending && _agent.remainingDistance <= stopAtDistance)
-//         {
-//             StartCoroutine(WaitAtPatrolPoint());
-//         }
-
-//     }
-
-//     private IEnumerator WaitAtPatrolPoint()
-//     {
-//         _isWaiting = true;
-//         _agent.isStopped = true;
-
-//         yield return new WaitForSeconds(patrolWaitTime);
-
-//         _agent.isStopped = false;
-
-//         GoToNextPatrolpoint();
-//         _isWaiting = false;
-//     }
-
-//     private void GoToClosestPatrolPoint()
-//     {
-//         if(patrolPoints.Length == 0)
-//         {
-//             return;
-//         }
-//         var closestIndex = 0;
-//         var closestDistance = float.MaxValue;
-
-//         for(var i = 0; i<patrolPoints.Length; i++)
-//         {
-//             var distance = Vector3.Distance(transform.position, patrolPoints[i].position);
-//             if(distance < closestDistance)
-//             {
-//                 closestDistance = distance;
-//                 closestIndex = i;
-//             }
-//         }
-
-//         _curentPatrolIndex = closestIndex;
-//         _agent.SetDestination(patrolPoints[_curentPatrolIndex].position);
-
-//     }
-
-//     private void GoToNextPatrolpoint()
-//     {
-//         if(patrolPoints.Length == 0)
-//         {
-//             return;
-//         }
-//         _agent.SetDestination(patrolPoints[_curentPatrolIndex].position);
-//         _curentPatrolIndex = (_curentPatrolIndex+1)%patrolPoints.Length;
-
-//     }
-//     //когда анимации будут, добавить потом это все
-//     // private void UpdateAnimations()
-//     // {
-//     //     var isMoving = _agent.velocity.sqrMagnitude > 0.01f;
-//     //     _animator.SetBool("IsWalking", isMoving);
-//     // }
-
-//     private bool CanSeePlayer()
-//     {
-//         return IsFacingPlayer() && HasClearPathToPlayer();
-//     }
-
-//     private bool IsFacingPlayer()
-//     {
-//         var dirToPlayer = (player.position - transform.position).normalized;
-//         var angle = Vector3.Angle(transform.forward, dirToPlayer);
-//         return angle <= viewAngle / 2f;
-//     }
-
-    
-// private bool HasClearPathToPlayer()
-// {
-//     Vector3 origin = transform.position + Vector3.up * 1.5f;
-//     Vector3 target = player.position + Vector3.up * 1f;
-
-//     Vector3 direction = target - origin;
-//     float distance = direction.magnitude;
-
-//     if (Physics.Raycast(
-//         origin,
-//         direction.normalized,
-//         out RaycastHit hit,
-//         distance))
-//     {
-//         // Проверяем сам объект игрока и его дочерние объекты
-//         return hit.transform == player ||
-//                hit.transform.IsChildOf(player);
-//     }
-
-//     return true;
-// }
-
-// }
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -240,6 +13,7 @@ public enum EnumyState
 
 public class EnemyController : MonoBehaviour
 {
+    [SerializeField] Animator animator;
     [SerializeField] private Transform[] patrolPoints;
     [SerializeField] private Transform player;
 
@@ -257,6 +31,8 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float hearingRange = 15f;
     [SerializeField] private float investigateTime = 3f;
     [SerializeField] private float maxSoundVolume = 1f;
+    [SerializeField] private float walkSpeed = 1.5f;
+[SerializeField] private float runSpeed = 3.5f;
 
     private NavMeshAgent _agent;
 
@@ -279,9 +55,19 @@ public class EnemyController : MonoBehaviour
 
 
     private void Awake()
+{
+    _agent = GetComponent<NavMeshAgent>();
+
+    if (animator == null)
     {
-        _agent = GetComponent<NavMeshAgent>();
+        animator = GetComponentInChildren<Animator>();
     }
+
+    if (_agent != null)
+    {
+        _agent.speed = walkSpeed;
+    }
+}
 
 
     private void OnEnable()
@@ -305,88 +91,86 @@ public class EnemyController : MonoBehaviour
     }
 
 
-    private void Update()
+    
+private void Update()
+{
+    if (_agent == null || !_agent.isOnNavMesh)
+        return;
+
+    if (player == null)
     {
-        if (player == null)
-            return;
-
-        var distanceToPlayer = Vector3.Distance(player.position, transform.position);
-
-        switch (_state)
-        {
-            case EnumyState.Patrolling:
-
-                Patrol();
-
-                // Зомби увидел игрока
-                if (distanceToPlayer <= detectionRange && CanSeePlayer())
-                {
-                    _state = EnumyState.Following;
-                    _hasHeardSound = false;
-                }
-
-                break;
-            case EnumyState.Investigating:
-
-                InvestigateSound(distanceToPlayer);
-
-                break;
-            case EnumyState.Following:
-
-                FollowPlayer();
-
-                // Игрок вошёл в радиус атаки
-                if (distanceToPlayer <= attackrange)
-                {
-                    _state = EnumyState.Attacking;
-                    StartAttack();
-                    break;
-                }
-
-                // Если игрок виден
-                if (CanSeePlayer())
-                {
-                    _timeSinceLostPlayer = 0f;
-                }
-                else
-                {
-                    // Начинаем отсчитывать время потери игрока
-                    _timeSinceLostPlayer += Time.deltaTime;
-
-                    if (_timeSinceLostPlayer >= losePlayerTime)
-                    {
-                        _state = EnumyState.Patrolling;
-                        _timeSinceLostPlayer = 0f;
-
-                        GoToClosestPatrolPoint();
-                    }
-                }
-
-                break;
-
-            case EnumyState.Attacking:
-
-                Attack();
-
-                _attackTimer += Time.deltaTime;
-
-                // Заканчиваем укус
-                if (_attackTimer >= attackDuration)
-                {
-                    _isBiting = false;
-                    _attackTimer = 0f;
-                }
-
-                // Если игрок отошёл - снова преследуем
-                if (!_isBiting && distanceToPlayer > attackrange)
-                {
-                    _state = EnumyState.Following;
-                    _agent.isStopped = false;
-                }
-
-                break;
-        }
+        UpdateAnimation();
+        return;
     }
+
+    float distanceToPlayer =
+        Vector3.Distance(player.position, transform.position);
+
+    switch (_state)
+    {
+        case EnumyState.Patrolling:
+            Patrol();
+
+            if (distanceToPlayer <= detectionRange && CanSeePlayer())
+            {
+                _state = EnumyState.Following;
+                _hasHeardSound = false;
+            }
+            break;
+
+        case EnumyState.Investigating:
+            InvestigateSound(distanceToPlayer);
+            break;
+
+        case EnumyState.Following:
+            FollowPlayer();
+
+            if (distanceToPlayer <= attackrange)
+            {
+                _state = EnumyState.Attacking;
+                StartAttack();
+                break;
+            }
+
+            if (CanSeePlayer())
+            {
+                _timeSinceLostPlayer = 0f;
+            }
+            else
+            {
+                _timeSinceLostPlayer += Time.deltaTime;
+
+                if (_timeSinceLostPlayer >= losePlayerTime)
+                {
+                    _state = EnumyState.Patrolling;
+                    _timeSinceLostPlayer = 0f;
+                    GoToClosestPatrolPoint();
+                }
+            }
+            break;
+
+        case EnumyState.Attacking:
+            Attack();
+
+            _attackTimer += Time.deltaTime;
+
+            if (_attackTimer >= attackDuration)
+            {
+                _isBiting = false;
+                _attackTimer = 0f;
+            }
+
+            if (!_isBiting && distanceToPlayer > attackrange)
+            {
+                _state = EnumyState.Following;
+                _agent.isStopped = false;
+            }
+            break;
+    }
+
+    UpdateAnimation();
+}
+
         private void StartAttack()
     {
         _agent.isStopped = true;
@@ -397,6 +181,33 @@ public class EnemyController : MonoBehaviour
         // Здесь позже можно запустить анимацию:
         // _animator.SetTrigger("Bite");
     }
+
+
+
+private void UpdateAnimation()
+{
+    if (animator == null || _agent == null)
+        return;
+
+    if (_state == EnumyState.Attacking)
+    {
+        animator.SetFloat("Speed", 0f);
+        return;
+    }
+
+    if (_agent.velocity.magnitude < 0.1f)
+    {
+        animator.SetFloat("Speed", 0f);
+    }
+    else if (_state == EnumyState.Following)
+    {
+        animator.SetFloat("Speed", 1f);
+    }
+    else
+    {
+        animator.SetFloat("Speed", 0.5f);
+    }
+}
 
 
     private void Attack()
@@ -422,10 +233,14 @@ public class EnemyController : MonoBehaviour
     }
 
     private void FollowPlayer()
-    {
-        _agent.isStopped = false;
-        _agent.SetDestination(player.position);
-    }
+{
+    if (_agent == null || player == null)
+        return;
+
+    _agent.isStopped = false;
+    _agent.speed = runSpeed;
+    _agent.SetDestination(player.position);
+}
 
     private void InvestigateSound(float distanceToPlayer)
     {
@@ -437,7 +252,7 @@ public class EnemyController : MonoBehaviour
             _investigateTimer = 0f;
             return;
         }
-
+        _agent.speed = walkSpeed;
         _agent.isStopped = false;
         _agent.SetDestination(_lastHeardPosition);
 
@@ -514,6 +329,7 @@ public class EnemyController : MonoBehaviour
 
     private void Patrol()
     {
+        _agent.speed = walkSpeed;
         if (_isWaiting)
         {
             return;
