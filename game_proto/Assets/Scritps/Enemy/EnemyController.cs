@@ -33,6 +33,11 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float maxSoundVolume = 1f;
     [SerializeField] private float walkSpeed = 1.5f;
 [SerializeField] private float runSpeed = 3.5f;
+[SerializeField] private float attackDamage = 20f;
+[SerializeField] private float attackCooldown = 1.2f;
+[SerializeField] private float attackHitTime = 0.35f;
+
+private bool attackDamageApplied;
 
     private NavMeshAgent _agent;
 
@@ -94,6 +99,14 @@ public class EnemyController : MonoBehaviour
     
 private void Update()
 {
+    if (!enabled || _agent == null || !_agent.enabled || !_agent.isOnNavMesh)
+        return;
+
+    if (player == null)
+    {
+        UpdateAnimation();
+        return;
+    }
     if (_agent == null || !_agent.isOnNavMesh)
         return;
 
@@ -149,38 +162,54 @@ private void Update()
             }
             break;
 
-        case EnumyState.Attacking:
-            Attack();
+       case EnumyState.Attacking:
 
-            _attackTimer += Time.deltaTime;
+    Attack();
 
-            if (_attackTimer >= attackDuration)
-            {
-                _isBiting = false;
-                _attackTimer = 0f;
-            }
+    _attackTimer += Time.deltaTime;
 
-            if (!_isBiting && distanceToPlayer > attackrange)
-            {
-                _state = EnumyState.Following;
-                _agent.isStopped = false;
-            }
-            break;
+    // Урон в момент удара
+    if (!attackDamageApplied && _attackTimer >= attackHitTime)
+    {
+        ApplyAttackDamage();
+        attackDamageApplied = true;
+    }
+
+    // Завершение атаки
+    if (_attackTimer >= attackCooldown)
+    {
+        _isBiting = false;
+        _attackTimer = 0f;
+
+        if (distanceToPlayer <= attackrange)
+        {
+            // Игрок рядом — повторная атака
+            StartAttack();
+        }
+        else
+        {
+            // Игрок отошёл — снова преследуем
+            _state = EnumyState.Following;
+            _agent.isStopped = false;
+        }
+    }
+
+    break;
     }
 
     UpdateAnimation();
 }
 
-        private void StartAttack()
-    {
-        _agent.isStopped = true;
+      private void StartAttack()
+{
+    _agent.isStopped = true;
 
-        _isBiting = true;
-        _attackTimer = 0f;
+    _isBiting = true;
+    _attackTimer = 0f;
+    attackDamageApplied = false;
 
-        // Здесь позже можно запустить анимацию:
-        // _animator.SetTrigger("Bite");
-    }
+    animator.SetTrigger("Attack");
+}
 
 
 
@@ -344,70 +373,83 @@ private void UpdateAnimation()
 
 
     private IEnumerator WaitAtPatrolPoint()
+{
+    if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh)
+        yield break;
+
+    _isWaiting = true;
+
+    _agent.isStopped = true;
+
+    yield return new WaitForSeconds(patrolWaitTime);
+
+    // Проверяем, жив ли зомби и активен ли агент
+    if (!enabled || _agent == null || !_agent.enabled || !_agent.isOnNavMesh)
+        yield break;
+
+    _agent.isStopped = false;
+
+    GoToNextPatrolpoint();
+
+    _isWaiting = false;
+}
+
+
+   private void GoToClosestPatrolPoint()
+{
+    if (!enabled || _agent == null || !_agent.enabled || !_agent.isOnNavMesh)
+        return;
+
+    if (patrolPoints == null || patrolPoints.Length == 0)
+        return;
+
+    var closestIndex = 0;
+    var closestDistance = float.MaxValue;
+
+    for (var i = 0; i < patrolPoints.Length; i++)
     {
-        _isWaiting = true;
+        if (patrolPoints[i] == null)
+            continue;
 
-        _agent.isStopped = true;
-
-        yield return new WaitForSeconds(patrolWaitTime);
-
-        _agent.isStopped = false;
-
-        GoToNextPatrolpoint();
-
-        _isWaiting = false;
-    }
-
-
-    private void GoToClosestPatrolPoint()
-    {
-        if (patrolPoints.Length == 0)
-        {
-            return;
-        }
-
-        var closestIndex = 0;
-        var closestDistance = float.MaxValue;
-
-        for (var i = 0; i < patrolPoints.Length; i++)
-        {
-            var distance = Vector3.Distance(
-                transform.position,
-                patrolPoints[i].position
-            );
-
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                closestIndex = i;
-            }
-        }
-
-        _curentPatrolIndex = closestIndex;
-
-        _agent.isStopped = false;
-        _agent.SetDestination(
-            patrolPoints[_curentPatrolIndex].position
+        var distance = Vector3.Distance(
+            transform.position,
+            patrolPoints[i].position
         );
+
+        if (distance < closestDistance)
+        {
+            closestDistance = distance;
+            closestIndex = i;
+        }
     }
+
+    _curentPatrolIndex = closestIndex;
+
+    _agent.isStopped = false;
+
+    _agent.SetDestination(
+        patrolPoints[_curentPatrolIndex].position
+    );
+}
 
 
     private void GoToNextPatrolpoint()
-    {
-        if (patrolPoints.Length == 0)
-        {
-            return;
-        }
+{
+    if (!enabled || _agent == null || !_agent.enabled || !_agent.isOnNavMesh)
+        return;
 
-        _agent.isStopped = false;
+    if (patrolPoints == null || patrolPoints.Length == 0)
+        return;
 
-        _agent.SetDestination(
-            patrolPoints[_curentPatrolIndex].position
-        );
+    _agent.isStopped = false;
 
-        _curentPatrolIndex =
-            (_curentPatrolIndex + 1) % patrolPoints.Length;
-    }
+    _agent.SetDestination(
+        patrolPoints[_curentPatrolIndex].position
+    );
+
+    _curentPatrolIndex =
+        (_curentPatrolIndex + 1) % patrolPoints.Length;
+}
     private bool CanSeePlayer()
     {
         return IsFacingPlayer() && HasClearPathToPlayer();
@@ -440,4 +482,16 @@ private void UpdateAnimation()
 
         return true;
     }
+    private void ApplyAttackDamage()
+{
+    if (player == null)
+        return;
+
+    Health playerHealth = player.GetComponent<Health>();
+
+    if (playerHealth != null)
+    {
+        playerHealth.TakeDmage();
+    }
+}
 }

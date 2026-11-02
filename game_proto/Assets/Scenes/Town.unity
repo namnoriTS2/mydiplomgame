@@ -3056,6 +3056,7 @@ MonoBehaviour:
   player: {fileID: 394528592}
   DeadScreen: {fileID: 37211697}
   damage: 10
+  damageCooldown: 1
 --- !u!114 &394528597
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9898,34 +9899,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1556658266}
   m_CullTransparentMesh: 1
---- !u!1 &1557708978 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1564057377766880060, guid: 0f023843fe9393f4593fe77cecd13089, type: 3}
-  m_PrefabInstance: {fileID: 6233511016645211202}
-  m_PrefabAsset: {fileID: 0}
---- !u!136 &1557708983
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1557708978}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.27
-  m_Height: 1.76
-  m_Direction: 1
-  m_Center: {x: 0, y: 0.3941071, z: 0}
 --- !u!1 &1562131793
 GameObject:
   m_ObjectHideFlags: 0
@@ -14455,6 +14428,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: zombie
       objectReference: {fileID: 0}
+    - target: {fileID: 1819882844546534052, guid: 0f023843fe9393f4593fe77cecd13089, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2580058255857301583, guid: 0f023843fe9393f4593fe77cecd13089, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.9566
@@ -14495,13 +14472,29 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3053470951669001790, guid: 0f023843fe9393f4593fe77cecd13089, type: 3}
+      propertyPath: m_CullingMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3053470951669001790, guid: 0f023843fe9393f4593fe77cecd13089, type: 3}
+      propertyPath: m_WarningMessage
+      value: "\nBinding warning: Some generic clip(s) animate transforms that are
+        already bound by a Humanoid avatar. These transforms can only be changed
+        by Humanoid clips.\n\tTransform 'mixamorig:Hips'\n\tTransform 'mixamorig:LeftFoot'\n\tTransform
+        'mixamorig:LeftHandThumb2'\n\tTransform 'mixamorig:LeftHandIndex1'\n\tTransform
+        'mixamorig:LeftHandPinky2'\n\tTransform 'mixamorig:RightHandRing2'\n\tTransform
+        'mixamorig:Spine1'\n\tTransform 'mixamorig:LeftToeBase'\n\tTransform 'mixamorig:LeftHandThumb3'\n\tTransform
+        'mixamorig:RightArm'\n\tand more ...\n\tFrom animation clip 'Standing React
+        Death Backward'"
+      objectReference: {fileID: 0}
+    - target: {fileID: 3053470951669001790, guid: 0f023843fe9393f4593fe77cecd13089, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1564057377766880060, guid: 0f023843fe9393f4593fe77cecd13089, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1557708983}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f023843fe9393f4593fe77cecd13089, type: 3}
 --- !u!4 &6439288277003935958
 Transform:

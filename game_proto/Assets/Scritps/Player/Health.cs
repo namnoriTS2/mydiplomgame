@@ -9,6 +9,9 @@ public class Health : MonoBehaviour
    [SerializeField] private PlayerController player;
    [SerializeField] private GameObject DeadScreen;
    [SerializeField] private float damage;
+   [SerializeField] private float damageCooldown = 1f;
+
+private float damageTimer;
     private void Start()
     {
         player = GetComponent<PlayerController>();
@@ -23,15 +26,21 @@ public class Health : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter(Collider other)
+   private void OnTriggerStay(Collider other)
+{
+    if (other.CompareTag("Enemy"))
     {
-        if (other.CompareTag("Enemy"))
+        damageTimer -= Time.deltaTime;
+
+        if (damageTimer <= 0f)
         {
             TakeDmage();
-        }       
+            damageTimer = damageCooldown;
+        }
     }
+}
 
-    private void TakeDmage()
+    public void TakeDmage()
     {
         health.value -= damage;
         Debug.Log($"Health: {health.value}");

@@ -1,5 +1,6 @@
 
 using UnityEngine;
+using UnityEngine.AI;
 
 public class EnemyHealth : MonoBehaviour
 {
@@ -7,8 +8,18 @@ public class EnemyHealth : MonoBehaviour
     [SerializeField] private float health = 100f;
 
     private bool isDead = false;
-
     public bool IsDead => isDead;
+
+    private Animator animator;
+    private EnemyController enemyController;
+    private NavMeshAgent agent;
+
+    private void Awake()
+    {
+        animator = GetComponentInChildren<Animator>();
+        enemyController = GetComponent<EnemyController>();
+        agent = GetComponent<NavMeshAgent>();
+    }
 
     public void ApplyDamage(float damage)
     {
@@ -32,9 +43,6 @@ public class EnemyHealth : MonoBehaviour
             return;
 
         health = 0f;
-
-        Debug.Log("Зомби убит скрытно!");
-
         Die();
     }
 
@@ -45,14 +53,18 @@ public class EnemyHealth : MonoBehaviour
 
         isDead = true;
 
-        // Отключаем AI зомби
-        EnemyController enemy = GetComponent<EnemyController>();
+        // Отключаем AI
+        if (enemyController != null)
+            enemyController.enabled = false;
 
-        if (enemy != null)
-            enemy.enabled = false;
+        // Отключаем NavMeshAgent
+        if (agent != null)
+            agent.enabled = false;
 
-        Debug.Log("Зомби умер!");
-
-        Destroy(gameObject);
+        // Запускаем анимацию смерти
+        if (animator != null)
+        {
+            animator.SetTrigger("Dead");
+        }
     }
 }
