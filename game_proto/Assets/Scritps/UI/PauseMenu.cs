@@ -11,6 +11,13 @@ public class PauseMenu : MonoBehaviour
     public GameObject pauseMenuUI;
     public GameObject optionsMenuUI;
 
+    [Header("Игровой интерфейс")]
+    [SerializeField] private GameObject healthUI;
+    [SerializeField] private GameObject staminaUI;
+    [SerializeField] private GameObject ammoUI;
+    [SerializeField] private GameObject inventoryUI;
+    private bool inventoryWasOpen;
+    
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -49,6 +56,9 @@ public class PauseMenu : MonoBehaviour
     {
         pauseMenuUI.SetActive(true);
         optionsMenuUI.SetActive(false);
+        inventoryWasOpen = inventoryUI != null && inventoryUI.activeSelf;
+        // Скрываем игровой интерфейс
+        SetGameUI(false);
 
         Time.timeScale = 0f;
         gameisPause = true;
@@ -62,6 +72,9 @@ public class PauseMenu : MonoBehaviour
         pauseMenuUI.SetActive(false);
         optionsMenuUI.SetActive(false);
 
+        // Возвращаем игровой интерфейс
+        SetGameUI(true);
+
         Time.timeScale = 1f;
         gameisPause = false;
 
@@ -73,6 +86,9 @@ public class PauseMenu : MonoBehaviour
     {
         pauseMenuUI.SetActive(false);
         optionsMenuUI.SetActive(true);
+
+        // Игровой интерфейс остаётся скрытым
+        SetGameUI(false);
 
         Time.timeScale = 0f;
         gameisPause = true;
@@ -86,6 +102,9 @@ public class PauseMenu : MonoBehaviour
         optionsMenuUI.SetActive(false);
         pauseMenuUI.SetActive(true);
 
+        // Игровой интерфейс остаётся скрытым
+        SetGameUI(false);
+
         Time.timeScale = 0f;
         gameisPause = true;
 
@@ -93,8 +112,24 @@ public class PauseMenu : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
     }
 
+    private void SetGameUI(bool state)
+    {
+        if (healthUI != null)
+            healthUI.SetActive(state);
+        if (staminaUI != null)
+            staminaUI.SetActive(state);
+
+        if (ammoUI != null)
+            ammoUI.SetActive(state);
+        if (inventoryUI != null)
+            inventoryUI.SetActive(state && inventoryWasOpen);
+    }
+
     public void LoadScene()
     {
+        Time.timeScale = 1f;
+        gameisPause = false;
+
         SceneManager.LoadScene("Menu");
     }
 }

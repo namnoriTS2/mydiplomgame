@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
@@ -16,20 +15,28 @@ public class StealthKill : MonoBehaviour
     public Transform playerCamera;
     public TMP_Text promptText;
 
+    [Header("Audio")]
+    [SerializeField] private PlayerAudio playerAudio;
 
     private EnemyHealth target;
 
-  private void Update()
-{
-    FindTarget();
-
-    if (target != null &&
-        Keyboard.current != null &&
-        Keyboard.current.fKey.wasPressedThisFrame)
+    private void Awake()
     {
-        PerformKill();
+        if (playerAudio == null)
+            playerAudio = GetComponent<PlayerAudio>();
     }
-}
+
+    private void Update()
+    {
+        FindTarget();
+
+        if (target != null &&
+            Keyboard.current != null &&
+            Keyboard.current.fKey.wasPressedThisFrame)
+        {
+            PerformKill();
+        }
+    }
 
     private void FindTarget()
     {
@@ -86,9 +93,7 @@ public class StealthKill : MonoBehaviour
         }
 
         if (promptText != null)
-        {
             promptText.gameObject.SetActive(target != null);
-        }
     }
 
     private void PerformKill()
@@ -100,6 +105,10 @@ public class StealthKill : MonoBehaviour
         target = null;
 
         HidePrompt();
+
+        // Звук скрытого убийства
+        playerAudio?.PlayStealthKillSound();
+
         enemyToKill.StealthKill();
     }
 
@@ -108,6 +117,7 @@ public class StealthKill : MonoBehaviour
         if (promptText != null)
             promptText.gameObject.SetActive(false);
     }
+
     public void OnStealthKill(InputAction.CallbackContext context)
     {
         if (context.performed)

@@ -32,12 +32,13 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float investigateTime = 3f;
     [SerializeField] private float maxSoundVolume = 1f;
     [SerializeField] private float walkSpeed = 1.5f;
-[SerializeField] private float runSpeed = 3.5f;
-[SerializeField] private float attackDamage = 20f;
-[SerializeField] private float attackCooldown = 1.2f;
-[SerializeField] private float attackHitTime = 0.35f;
+    [SerializeField] private float runSpeed = 3.5f;
+    [SerializeField] private float attackDamage = 20f;
+    [SerializeField] private float attackCooldown = 1.2f;
+    [SerializeField] private float attackHitTime = 0.35f;
+    private ZombieAudio zombieAudio;
 
-private bool attackDamageApplied;
+    private bool attackDamageApplied;
 
     private NavMeshAgent _agent;
 
@@ -60,19 +61,20 @@ private bool attackDamageApplied;
 
 
     private void Awake()
-{
-    _agent = GetComponent<NavMeshAgent>();
-
-    if (animator == null)
     {
-        animator = GetComponentInChildren<Animator>();
-    }
+        zombieAudio = GetComponent<ZombieAudio>();
+        _agent = GetComponent<NavMeshAgent>();
 
-    if (_agent != null)
-    {
-        _agent.speed = walkSpeed;
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (_agent != null)
+        {
+            _agent.speed = walkSpeed;
+        }
     }
-}
 
 
     private void OnEnable()
@@ -176,23 +178,32 @@ private void Update()
     }
 
     // Завершение атаки
-    if (_attackTimer >= attackCooldown)
-    {
-        _isBiting = false;
-        _attackTimer = 0f;
+   if (_attackTimer >= attackCooldown)
+{
+    _isBiting = false;
+    _attackTimer = 0f;
 
-        if (distanceToPlayer <= attackrange)
-        {
-            // Игрок рядом — повторная атака
-            StartAttack();
-        }
-        else
-        {
-            // Игрок отошёл — снова преследуем
-            _state = EnumyState.Following;
-            _agent.isStopped = false;
-        }
+    if (distanceToPlayer <= attackrange)
+    {
+        StartAttack();
     }
+    else
+    {
+        // Возвращаемся к преследованию
+        _state = EnumyState.Following;
+
+        _agent.isStopped = false;
+        _agent.speed = runSpeed;
+
+        // Сбрасываем анимацию атаки
+        animator.ResetTrigger("Attack");
+
+        // Сразу обновляем анимацию движения
+        animator.SetFloat("Speed", 1f);
+
+        _agent.SetDestination(player.position);
+    }
+}
 
     break;
     }
@@ -202,6 +213,7 @@ private void Update()
 
       private void StartAttack()
 {
+    zombieAudio?.PlayAttackSound();
     _agent.isStopped = true;
 
     _isBiting = true;
@@ -213,6 +225,7 @@ private void Update()
 
 
 
+
 private void UpdateAnimation()
 {
     if (animator == null || _agent == null)
@@ -221,20 +234,26 @@ private void UpdateAnimation()
     if (_state == EnumyState.Attacking)
     {
         animator.SetFloat("Speed", 0f);
+        zombieAudio?.StopMovementSound();
         return;
     }
 
-    if (_agent.velocity.magnitude < 0.1f)
+    float currentSpeed = _agent.velocity.magnitude;
+
+    if (currentSpeed < 0.1f)
     {
         animator.SetFloat("Speed", 0f);
+        zombieAudio?.StopMovementSound();
     }
     else if (_state == EnumyState.Following)
     {
         animator.SetFloat("Speed", 1f);
+        zombieAudio?.PlayMovementSound(true);
     }
     else
     {
         animator.SetFloat("Speed", 0.5f);
+        zombieAudio?.PlayMovementSound(false);
     }
 }
 
@@ -272,76 +291,72 @@ private void UpdateAnimation()
 }
 
     private void InvestigateSound(float distanceToPlayer)
+{
+    // Если увидел игрока — начинает преследование
+    if (distanceToPlayer <= detectionRange && CanSeePlayer())
     {
-        // Если во время поиска зомби увидел игрока
-        if (distanceToPlayer <= detectionRange && CanSeePlayer())
+        _state = EnumyState.Following;
+        _hasHeardSound = false;
+        _investigateTimer = 0f;
+        return;
+    }
+
+    // Если ещё идёт к месту звука — продолжаем движение
+    if (!_agent.pathPending &&
+        _agent.remainingDistance <= stopAtDistance)
+    {
+        _agent.isStopped = true;
+
+        _investigateTimer += Time.deltaTime;
+
+        if (_investigateTimer >= investigateTime)
         {
-            _state = EnumyState.Following;
             _hasHeardSound = false;
             _investigateTimer = 0f;
-            return;
-        }
-        _agent.speed = walkSpeed;
-        _agent.isStopped = false;
-        _agent.SetDestination(_lastHeardPosition);
 
-        // Если дошли до места звука
-        if (!_agent.pathPending &&
-            _agent.remainingDistance <= stopAtDistance)
-        {
-            _agent.isStopped = true;
+            _agent.isStopped = false;
+            _state = EnumyState.Patrolling;
 
-            _investigateTimer += Time.deltaTime;
-
-            // Некоторое время "ищем" игрока
-            if (_investigateTimer >= investigateTime)
-            {
-                _hasHeardSound = false;
-                _investigateTimer = 0f;
-
-                _agent.isStopped = false;
-
-                _state = EnumyState.Patrolling;
-
-                GoToClosestPatrolPoint();
-            }
+            GoToClosestPatrolPoint();
         }
     }
+}
 
 
     // Этот метод вызывается, когда где-то произошёл звук
     public void HearSound(Vector3 soundPosition, float volume)
-    {
-        // Слишком тихий звук
-        if (volume < hearingThreshold)
-            return;
+{
+    if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh)
+        return;
 
-        // Расстояние до источника звука
-        float distance = Vector3.Distance(transform.position, soundPosition);
+    if (volume < hearingThreshold)
+        return;
 
-        // Чем громче звук, тем дальше его слышно
-        float soundRadius =
-            hearingRange * Mathf.Clamp01(volume / maxSoundVolume);
+    float distance = Vector3.Distance(transform.position, soundPosition);
 
-        // Звук слишком далеко
-        if (distance > soundRadius)
-            return;
+    float soundRadius =
+        hearingRange * Mathf.Clamp01(volume / maxSoundVolume);
 
-        // Если уже атакует - звук игнорируем
-        if (_state == EnumyState.Attacking)
-            return;
+    if (distance > soundRadius)
+        return;
 
-        _lastHeardPosition = soundPosition;
-        _hasHeardSound = true;
+    if (_state == EnumyState.Attacking)
+        return;
 
-        _investigateTimer = 0f;
-        _timeSinceLostPlayer = 0f;
+    Debug.Log($"{gameObject.name} услышал звук! Расстояние: {distance:F1}, радиус: {soundRadius:F1}");
 
-        _state = EnumyState.Investigating;
+    _lastHeardPosition = soundPosition;
+    _hasHeardSound = true;
 
-        _agent.isStopped = false;
-        _agent.SetDestination(_lastHeardPosition);
-    }
+    _investigateTimer = 0f;
+    _timeSinceLostPlayer = 0f;
+
+    _state = EnumyState.Investigating;
+
+    _agent.isStopped = false;
+    _agent.speed = walkSpeed;
+    _agent.SetDestination(_lastHeardPosition);
+}
 
 
     // Этот метод вызывается игроком
@@ -387,11 +402,13 @@ private void UpdateAnimation()
     if (!enabled || _agent == null || !_agent.enabled || !_agent.isOnNavMesh)
         yield break;
 
-    _agent.isStopped = false;
-
-    GoToNextPatrolpoint();
-
     _isWaiting = false;
+
+    if (_state == EnumyState.Patrolling)
+    {
+        _agent.isStopped = false;
+        GoToNextPatrolpoint();
+    }
 }
 
 

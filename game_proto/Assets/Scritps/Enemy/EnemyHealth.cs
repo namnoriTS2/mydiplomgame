@@ -13,9 +13,11 @@ public class EnemyHealth : MonoBehaviour
     private Animator animator;
     private EnemyController enemyController;
     private NavMeshAgent agent;
+    private ZombieAudio zombieAudio;
 
     private void Awake()
     {
+        zombieAudio = GetComponent<ZombieAudio>();
         animator = GetComponentInChildren<Animator>();
         enemyController = GetComponent<EnemyController>();
         agent = GetComponent<NavMeshAgent>();
@@ -34,6 +36,16 @@ public class EnemyHealth : MonoBehaviour
         if (health <= 0f)
         {
             Die();
+            return;
+        }
+        zombieAudio?.PlayHitSound();
+        // Проигрываем анимацию получения урона
+        if (animator != null)
+        {
+            animator.ResetTrigger("Hit");
+            animator.SetTrigger("Hit");
+
+            Debug.Log("Анимация получения урона запущена");
         }
     }
 
@@ -59,11 +71,18 @@ public class EnemyHealth : MonoBehaviour
 
         // Отключаем NavMeshAgent
         if (agent != null)
+        {
+            if (agent.enabled && agent.isOnNavMesh)
+                agent.isStopped = true;
+
             agent.enabled = false;
+        }
 
         // Запускаем анимацию смерти
         if (animator != null)
         {
+            animator.ResetTrigger("Hit");
+            zombieAudio?.PlayDeathSound();
             animator.SetTrigger("Dead");
         }
     }

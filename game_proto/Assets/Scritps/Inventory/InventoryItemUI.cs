@@ -5,16 +5,29 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class InventoryItemUI : MonoBehaviour,
-    IBeginDragHandler, IDragHandler, IEndDragHandler
+    IBeginDragHandler,
+    IDragHandler,
+    IEndDragHandler
 {
+    [Header("UI")]
     public Image icon;
     public TMP_Text amountText;
 
     private InventoryItem item;
     private InventoryManager manager;
+
     private RectTransform rectTransform;
     private Canvas canvas;
     private CanvasGroup canvasGroup;
+
+    private Vector2 dragOffset;
+    private Vector2 originalPosition;
+
+    private bool isDragging;
+
+    // =====================================================
+    // НАСТРОЙКА ПРЕДМЕТА
+    // =====================================================
 
     public void Setup(
         InventoryItem inventoryItem,
@@ -25,64 +38,166 @@ public class InventoryItemUI : MonoBehaviour,
 
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
+
         canvasGroup = GetComponent<CanvasGroup>();
 
         if (canvasGroup == null)
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
-        if (icon != null)
-            icon.sprite = item.data.icon;
+        // Если Image не назначен вручную,
+        // используем Image самого объекта.
+        if (icon == null)
+            icon = GetComponent<Image>();
 
-        if (amountText != null)
+        // Если текст не назначен вручную,
+        // ищем его среди дочерних объектов.
+        if (amountText == null)
+            amountText = GetComponentInChildren<TMP_Text>(true);
+
+        if (icon != null)
         {
-            amountText.text = item.data.maxStack > 1
-                ? item.amount.ToString()
-                : "";
+            icon.sprite = item.data.icon;
+            icon.preserveAspect = true;
+            icon.raycastTarget = true;
         }
 
-        float step = manager.cellSize + manager.spacing;
+        UpdateAmountText();
+        UpdateSize();
+        UpdatePosition();
+    }
 
-        rectTransform.anchorMin = new Vector2(0, 1);
-        rectTransform.anchorMax = new Vector2(0, 1);
-        rectTransform.pivot = new Vector2(0, 1);
+    // =====================================================
+    // КОЛИЧЕСТВО ПРЕДМЕТОВ
+    // =====================================================
+
+    public void UpdateAmountText()
+    {
+        if (amountText == null)
+            return;
+
+        if (item.data.maxStack > 1 && item.amount > 1)
+            amountText.text = item.amount.ToString();
+        else
+            amountText.text = "";
+    }
+
+    // =====================================================
+    // РАЗМЕР ПРЕДМЕТА
+    // =====================================================
+
+    public void UpdateSize()
+    {
+        if (item == null || item.data == null)
+            return;
+
+        float width =
+            item.data.width * manager.cellWidth +
+            (item.data.width - 1) * manager.spacingX;
+
+        float height =
+            item.data.height * manager.cellHeight +
+            (item.data.height - 1) * manager.spacingY;
 
         rectTransform.sizeDelta = new Vector2(
-            item.data.width * manager.cellSize +
-                (item.data.width - 1) * manager.spacing,
-            item.data.height * manager.cellSize +
-                (item.data.height - 1) * manager.spacing
-        );
-
-        rectTransform.anchoredPosition = new Vector2(
-            item.x * step,
-            -item.y * step
+            width,
+            height
         );
     }
+
+    // =====================================================
+    // ПОЛОЖЕНИЕ ПРЕДМЕТА
+    // =====================================================
+
+    public void UpdatePosition()
+    {
+        if (item == null || manager == null)
+            return;
+
+        rectTransform.anchorMin = new Vector2(0f, 1f);
+        rectTransform.anchorMax = new Vector2(0f, 1f);
+        rectTransform.pivot = new Vector2(0f, 1f);
+
+        rectTransform.anchoredPosition = new Vector2(
+            item.x * manager.CellStepX,
+            -item.y * manager.CellStepY
+        );
+    }
+
+    // =====================================================
+    // НАЧАЛО ПЕРЕТАСКИВАНИЯ
+    // =====================================================
 
     public void OnBeginDrag(PointerEventData eventData)
     {
         if (manager == null || !manager.IsOpen)
             return;
 
+        if (item == null)
+            return;
+
+        originalPosition = rectTransform.anchoredPosition;
+
+        // Запоминаем смещение курсора относительно предмета.
+        if (RectTransformUtility
+            .ScreenPointToLocalPointInRectangle(
+                manager.itemLayer,
+                eventData.position,
+                eventData.pressEventCamera,
+                out Vector2 localPoint))
+        {
+            dragOffset =
+                originalPosition - localPoint;
+        }
+
+        isDragging = true;
+
+        // Предмет рисуется поверх остальных.
         transform.SetAsLastSibling();
+
+        // Позволяем UI получать события мыши под предметом.
         canvasGroup.blocksRaycasts = false;
     }
 
+    // =====================================================
+    // ПЕРЕТАСКИВАНИЕ
+    // =====================================================
+
     public void OnDrag(PointerEventData eventData)
     {
-        if (manager == null || !manager.IsOpen)
+        if (!isDragging || manager == null)
             return;
 
-        rectTransform.anchoredPosition +=
-            eventData.delta / canvas.scaleFactor;
+        if (!manager.IsOpen)
+            return;
+
+        if (RectTransformUtility
+            .ScreenPointToLocalPointInRectangle(
+                manager.itemLayer,
+                eventData.position,
+                eventData.pressEventCamera,
+                out Vector2 localPoint))
+        {
+            rectTransform.anchoredPosition =
+                localPoint + dragOffset;
+        }
     }
+
+    // =====================================================
+    // ЗАВЕРШЕНИЕ ПЕРЕТАСКИВАНИЯ
+    // =====================================================
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (manager == null)
+        if (!isDragging)
             return;
 
-        canvasGroup.blocksRaycasts = true;
+        isDragging = false;
+
+        if (canvasGroup != null)
+            canvasGroup.blocksRaycasts = true;
+
+        if (manager == null || item == null)
+            return;
 
         if (!manager.IsOpen)
         {
@@ -97,12 +212,28 @@ public class InventoryItemUI : MonoBehaviour,
                 eventData.pressEventCamera,
                 out Vector2 localPoint))
         {
-            float step = manager.cellSize + manager.spacing;
+            // Получаем предполагаемое положение
+            // верхнего левого угла предмета.
+            Vector2 itemPosition =
+                localPoint + dragOffset;
 
-            int x = Mathf.FloorToInt(localPoint.x / step);
-            int y = Mathf.FloorToInt(-localPoint.y / step);
+            int targetX = Mathf.FloorToInt(
+                itemPosition.x / manager.CellStepX);
 
-            manager.TryMoveItem(item, x, y);
+            int targetY = Mathf.FloorToInt(
+                -itemPosition.y / manager.CellStepY);
+
+            bool success = manager.TryMoveItem(
+                item,
+                targetX,
+                targetY
+            );
+
+            if (!success)
+            {
+                rectTransform.anchoredPosition =
+                    originalPosition;
+            }
         }
         else
         {
